@@ -1,0 +1,87 @@
+<!-- templates/index.html -->
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Viral Scripts</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+      }
+      .container {
+        text-align: center;
+        margin-top: 50px;
+      }
+      .transcript-box {
+        text-align: left;
+        width: 80%;
+        margin: 20px auto;
+        padding: 10px;
+        border: 1px solid #ccc;
+        white-space: pre-wrap;
+        background-color: #f9f9f9;
+      }
+      .form-group {
+        margin: 20px 0;
+      }
+      .button-group button {
+        padding: 10px 20px;
+        margin: 5px;
+      }
+      .error {
+        color: red;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Viral Scripts</h1>
+      <p>Enter any YouTube Short link to get the transcript of viral shorts, easily store and edit like Google Docs, and click a button to rehash them for more content or tailor them to another niche.</p>
+      
+      <!-- Fetch Transcript Form -->
+      <form method="POST" action="/">
+        <input type="hidden" name="action" value="fetch_transcript">
+        <input type="text" name="youtube_url" placeholder="Enter YouTube Video URL" style="width: 60%; padding: 10px;">
+        <button type="submit">Get Transcript</button>
+      </form>
+
+      <div style="margin-top: 20px;">
+        {% if error_message %}
+          <p class="error">{{ error_message }}</p>
+        {% endif %}
+
+        {% if original_transcript %}
+          <h3>Original Transcript:</h3>
+          <div class="transcript-box">{{ original_transcript }}</div>
+        {% endif %}
+
+        {% if reformatted_transcript %}
+          <h3>Reformatted Transcript:</h3>
+          <div class="transcript-box">{{ reformatted_transcript }}</div>
+          
+          <!-- Rehash Transcript Form -->
+          <form method="POST" action="/">
+            <input type="hidden" name="action" value="rehash">
+            <input type="hidden" name="reformatted_transcript" value="{{ reformatted_transcript }}">
+            <button type="submit">Rehash</button>
+          </form>
+
+          <!-- Rehash with Niche Form -->
+          <form method="POST" action="/" style="margin-top: 10px;">
+            <input type="hidden" name="action" value="rehash_niche">
+            <input type="hidden" name="reformatted_transcript" value="{{ reformatted_transcript }}">
+            <input type="text" name="niche_description" placeholder="Enter new niche/topic" style="width: 60%; padding: 10px;">
+            <button type="submit">Rehash for Different Niche</button>
+          </form>
+        {% endif %}
+
+        {% if rehashed_transcript %}
+          <h3>Rehashed Transcript:</h3>
+          <div class="transcript-box">{{ rehashed_transcript }}</div>
+        {% endif %}
+      </div>
+    </div>
+  </body>
+</html>
