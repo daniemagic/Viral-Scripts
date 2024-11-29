@@ -1,9 +1,11 @@
 # utils.py
-
+import requests
+import instaloader
 import re
 import logging
 import requests
 import subprocess
+import whisper
 import openai
 from youtube_transcript_api import YouTubeTranscriptApi
 from dotenv import load_dotenv
@@ -95,7 +97,7 @@ def reformat_with_ollama(transcript, title, niche = "none"):
     """
     try:
         logger.debug("Reformatting transcript with Ollama.")
-        if title:
+        if title and (niche == "none"):
             prompt = (
                 f"Title: {title}\n\n"
                 "Reformat the following YouTube transcript to make it readable for a Google Docs document. "
@@ -111,9 +113,9 @@ def reformat_with_ollama(transcript, title, niche = "none"):
             )
         else:
             prompt = (
-                    "Rehash the following YouTube transcript but make the subject matter about {niche}." +
-                        "In other words, keep the same hook and script sentence structure but make the subject matter about {niche}.\n\n"  + transcript
-                        
+                    f"Rehash the following YouTube transcript but make the subject matter about {niche}."
+                    f"In other words, keep the same hook and script sentence structure but make the subject matter about {niche}.\n\n"  
+                    + transcript
                     )
         ollama_command = ["ollama", "run", "llama3.1"]
         result = subprocess.run(ollama_command, input=prompt, capture_output=True, text=True)
@@ -159,3 +161,67 @@ def reformat_with_openai(transcript, title):
     except Exception as e:
         logger.error(f"Error reformatting with OpenAI: {e}")
         raise
+
+def fetch_instagram_content(url):
+    try:
+        logger.debug(f"Fetching Instagram content from URL: {url}")
+        loader = instaloader.Instaloader()
+        shortcode_match = re.search(r"instagram\.com/p/([^/?#&]+)", url)
+        if not shortcode_match:
+            raise ValueError("Invalid Instagram URL format.")
+
+        shortcode = shortcode_match.group(1)
+        post = instaloader.Post.from_shortcode(loader.context, shortcode)
+
+        if post.is_video:
+            video_url = post.video_url
+            caption = post.caption
+
+            # Download the video
+            video_response = requests.get(video_url)
+            video_file = f"{shortcode}.mp4"
+            with open(video_file, 'wb') as file:
+                file.write(video_response.content)
+            logger.debug(f"Downloaded Instagram video: {video_file}")
+
+            return {
+                "type": "video",
+                "caption": caption,
+                "video_path": video_file
+            }
+        else:
+            return {
+                "type": "image",
+                "caption": post.caption
+            }
+    except Exception as e:
+        logger.error(f"Error fetching Instagram content: {e}")
+        raise RuntimeError(f"Error fetching Instagram content: {e}")
+    
+def extract_audio_from_video(video_path):
+    try:
+        audio_file = video_path.replace(".mp4", ".mp3")
+        command = [
+            "ffmpeg", "-i", video_path,
+            "-vn", "-acodec", "mp3", audio_file
+        ]
+        subprocess.run(command, check=True)
+        logger.debug(f"Extracted audio from video: {audio_file}")
+        return audio_file
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Error extracting audio: {e}")
+        raise RuntimeError(f"Error extracting audio from video: {e}")
+    
+
+def transcribe_audio_locally(audio_file):
+    try:
+        logger.debug(f"Transcribing audio file locally with Whisper: {audio_file}")
+        # Load the Whisper model (you can use "base", "small", etc.)
+        model = whisper.load_model("base")  # Choose model size based on your hardware
+        result = model.transcribe(audio_file)
+        transcript = result['text']
+        logger.debug(f"Local Whisper transcription complete: {transcript[:30]}...")  # Log first 30 characters
+        return transcript
+    except Exception as e:
+        logger.error(f"Error transcribing audio locally: {e}")
+        raise RuntimeError(f"Error transcribing audio locally: {e}")
