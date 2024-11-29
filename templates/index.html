@@ -1,37 +1,119 @@
-<!-- templates/index.html -->
-
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Viral Scripts</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
+      :root {
+        --primary-color: #4a90e2;
+        --secondary-color: #f39c12;
+        --background-color: #f4f4f4;
+        --text-color: #333;
+        --border-color: #ccc;
+        --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
       body {
-        font-family: Arial, sans-serif;
+        font-family: 'Roboto', Arial, sans-serif;
+        line-height: 1.6;
+        color: var(--text-color);
+        background-color: var(--background-color);
+        margin: 0;
+        padding: 0;
       }
+
       .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
         text-align: center;
-        margin-top: 50px;
       }
+
+      h1 {
+        color: var(--primary-color);
+        font-size: 2.5rem;
+        margin-bottom: 20px;
+      }
+
+      p {
+        font-size: 1.1rem;
+        margin-bottom: 30px;
+      }
+
       .transcript-box {
-        text-align: left;
-        width: 80%;
-        margin: 20px auto;
-        padding: 10px;
-        border: 1px solid #ccc;
-        white-space: pre-wrap;
-        background-color: #f9f9f9;
+        width: 100%;
+        margin: 20px 0;
+        padding: 15px;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        background-color: #fff;
+        resize: vertical;
+        font-size: 1rem;
+        line-height: 1.5;
+        box-shadow: var(--box-shadow);
+        transition: box-shadow 0.3s ease;
       }
+
+      .transcript-box:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px var(--primary-color);
+      }
+
       .form-group {
         margin: 20px 0;
       }
-      .button-group button {
-        padding: 10px 20px;
-        margin: 5px;
+
+      input[type="text"] {
+        width: 60%;
+        padding: 12px;
+        font-size: 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: 4px;
+        transition: border-color 0.3s ease;
       }
+
+      input[type="text"]:focus {
+        outline: none;
+        border-color: var(--primary-color);
+      }
+
+      button {
+        padding: 12px 24px;
+        margin: 5px;
+        font-size: 1rem;
+        color: #fff;
+        background-color: var(--primary-color);
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+
+      button:hover {
+        background-color: #3a7bc8;
+      }
+
       .error {
-        color: red;
+        color: #e74c3c;
+        font-weight: bold;
+        margin-top: 10px;
+      }
+
+      h3 {
+        color: var(--secondary-color);
+        margin-top: 30px;
+      }
+
+      @media (max-width: 600px) {
+        .container {
+          padding: 10px;
+        }
+
+        input[type="text"], .transcript-box {
+          width: 90%;
+        }
       }
     </style>
   </head>
@@ -43,7 +125,7 @@
       <!-- Fetch Transcript Form -->
       <form method="POST" action="/">
         <input type="hidden" name="action" value="fetch_transcript">
-        <input type="text" name="media_url" placeholder="Enter YouTube, TikTok, or Instagram Video URL" style="width: 60%; padding: 10px;">
+        <input type="text" name="media_url" placeholder="Enter YouTube, TikTok, or Instagram Video URL">
         <button type="submit">Get Transcript</button>
       </form>
 
@@ -54,12 +136,12 @@
 
         {% if original_transcript %}
           <h3>Original Transcript:</h3>
-          <div class="transcript-box">{{ original_transcript }}</div>
+          <textarea class="transcript-box" rows="10">{{ original_transcript }}</textarea>
         {% endif %}
 
         {% if reformatted_transcript %}
           <h3>Reformatted Transcript:</h3>
-          <div class="transcript-box">{{ reformatted_transcript }}</div>
+          <textarea class="transcript-box" rows="10" name="reformatted_transcript">{{ reformatted_transcript }}</textarea>
           
           <!-- Rehash Transcript Form -->
           <form method="POST" action="/">
@@ -72,14 +154,14 @@
           <form method="POST" action="/" style="margin-top: 10px;">
             <input type="hidden" name="action" value="rehash_niche">
             <input type="hidden" name="reformatted_transcript" value="{{ reformatted_transcript }}">
-            <input type="text" name="niche_description" placeholder="Enter new niche/topic" style="width: 60%; padding: 10px;">
+            <input type="text" name="niche_description" placeholder="Enter new niche/topic">
             <button type="submit">Rehash for Different Niche</button>
           </form>
         {% endif %}
 
         {% if rehashed_transcript %}
           <h3>Rehashed Transcript:</h3>
-          <div class="transcript-box">{{ rehashed_transcript }}</div>
+          <textarea class="transcript-box" rows="10">{{ rehashed_transcript }}</textarea>
         {% endif %}
       </div>
     </div>
