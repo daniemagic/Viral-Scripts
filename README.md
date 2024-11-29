@@ -6,7 +6,7 @@ Viral Scripts is a Flask-based web app for repurposing video content. It lets yo
 ---
 
 ## Features
-1. **Video Transcript Extraction**:
+**1. Video Transcript Extraction**:
 Extracts transcripts from YouTube videos using the YouTube API.
 Transcribes audio locally for TikTok and Instagram videos.
 
