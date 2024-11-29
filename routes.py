@@ -12,7 +12,8 @@ from utils import (
     reformat_with_openai,
     fetch_instagram_content,
     extract_audio_from_video,
-    transcribe_audio_locally
+    transcribe_audio_locally,
+    fetch_tiktok_content
 )
 import os
 from dotenv import load_dotenv
@@ -77,9 +78,26 @@ def index():
                     except RuntimeError as e:
                         error_message = str(e)
                         logger.error(f"RuntimeError: {error_message}")
+                elif 'tiktok.com' in media_url:
+                    logger.debug(f"Received TikTok URL: {media_url}")
+                    try:
+                        tiktok_content = fetch_tiktok_content(media_url)
+                        if tiktok_content["type"] == "video":
+                            # Extract audio from the downloaded TikTok video
+                            audio_file = extract_audio_from_video(tiktok_content["video_path"])
+                            
+                            # Transcribe the audio using Whisper locally
+                            original_transcript = transcribe_audio_locally(audio_file)
+                            
+                            # Optional: Reformat transcript using OpenAI
+                            reformatted_transcript = reformat_with_ollama(original_transcript, tiktok_content["title"])
+                        else:
+                            error_message = "Currently, only video posts are supported for TikTok. Please provide a valid video link."
+                    except RuntimeError as e:
+                        error_message = str(e)
+                        logger.error(f"RuntimeError: {error_message}")                
                 else:
                     error_message = "Unsupported URL format. Please enter a valid YouTube or Instagram link."
-
             except ValueError as e:
                 error_message = str(e)
                 logger.error(f"ValueError: {error_message}")

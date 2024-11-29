@@ -10,6 +10,7 @@ import openai
 from youtube_transcript_api import YouTubeTranscriptApi
 from dotenv import load_dotenv
 import os
+import yt_dlp
 
 # Set up logging for debugging
 logging.basicConfig(level=logging.DEBUG)
@@ -225,3 +226,24 @@ def transcribe_audio_locally(audio_file):
     except Exception as e:
         logger.error(f"Error transcribing audio locally: {e}")
         raise RuntimeError(f"Error transcribing audio locally: {e}")
+
+def fetch_tiktok_content(url):
+    try:
+        logger.debug(f"Fetching TikTok content from URL: {url}")
+        ydl_opts = {
+            'format': 'best',
+            'outtmpl': 'tiktok_video.%(ext)s',  # Save as tiktok_video.mp4
+            'noplaylist': True,
+        }
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=True)
+            video_path = f"tiktok_video.{info['ext']}"
+            logger.debug(f"TikTok video downloaded successfully: {video_path}")
+            return {
+                "type": "video",
+                "video_path": video_path,
+                "title": info.get('title', 'TikTok Video')
+            }
+    except Exception as e:
+        logger.error(f"Error fetching TikTok content: {e}")
+        raise RuntimeError(f"Error fetching TikTok content: {e}")
