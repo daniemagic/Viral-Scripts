@@ -5,6 +5,7 @@ from flask import Flask, request, render_template_string
 from youtube_transcript_api import YouTubeTranscriptApi
 from dotenv import load_dotenv
 import os
+import subprocess
 
 # Load environment variables from .env file
 load_dotenv()
@@ -23,7 +24,7 @@ def get_video_id(url):
     Extract the video ID from a YouTube URL.
     """
     try:
-        video_id_match = re.search(r'(?<=v=)[^&#]+|(?<=youtu.be/)[^?&#]+', url)
+        video_id_match = re.search(r'(?<=v=)[^&#]+|(?<=youtu.be/)[^?&#]+|(?<=shorts/)[^?&#]+', url)
         if video_id_match:
             video_id = video_id_match.group(0)
             logger.debug(f"Extracted video ID: {video_id}")
@@ -68,7 +69,7 @@ def reformat_with_openai(transcript):
     """
     try:
         logger.debug("Reformatting transcript with OpenAI API.")
-        prompt = "Reformat the following transcript to make it more readable for a Google Docs document:\n" + transcript
+        prompt = "Reformat the following YouTube transcript to make it readable for a Google Docs document. Keep the same exact words.\n" + transcript
         response = openai.Completion.create(
             model="gpt-3.5-turbo",
             prompt=prompt,
@@ -80,7 +81,21 @@ def reformat_with_openai(transcript):
         return reformatted_text
     except Exception as e:
         logger.error(f"Error reformating with OpenAI: {e}")
-        raise RuntimeError(f"Error reformating with OpenAI: {e}")
+        try:
+            # Fallback to using Ollama for reformatting
+            logger.debug("Attempting to reformat with Ollama as a fallback.")
+            prompt = "Reformat the following YouTube transcript to make it readable for a Google Docs document. Keep the same exact words.\n" + transcript
+            ollama_command = ["ollama", "run", "llama3.1"]
+            result = subprocess.run(ollama_command, input=prompt, capture_output=True, text=True)
+            if result.returncode == 0:
+                reformatted_text = result.stdout.strip()
+                logger.debug("Ollama processing complete.")
+                return reformatted_text
+            else:
+                raise RuntimeError(f"Ollama error: {result.stderr}")
+        except Exception as ollama_error:
+            logger.error(f"Error reformating with Ollama: {ollama_error}")
+            raise RuntimeError(f"Error reformating with both OpenAI and Ollama: {e}, {ollama_error}")
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -123,7 +138,7 @@ def index():
                     {% endif %}
                     {% if reformatted_transcript %}
                         <h3>Reformatted Transcript:</h3>
-                        <pre style="text-align: left; width: 60%; margin: 0 auto; padding: 10px; border: 1px solid #ccc;">{{ reformatted_transcript }}</pre>
+                        <pre style="text-align: left; width: 60%; margin: 0 auto; padding: 10px; border: 1px solid #ccc; white-space: pre-wrap;">{{ reformatted_transcript }}</pre>
                     {% endif %}
                 </div>
             </div>
