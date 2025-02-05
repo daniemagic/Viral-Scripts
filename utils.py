@@ -167,11 +167,12 @@ def fetch_instagram_content(url):
     try:
         logger.debug(f"Fetching Instagram content from URL: {url}")
         loader = instaloader.Instaloader()
-        shortcode_match = re.search(r"instagram\.com/p/([^/?#&]+)", url)
+        shortcode_match = re.search(r"instagram\.com/(p|reel)/([^/?#&]+)", url)  # Updated regex
+
         if not shortcode_match:
             raise ValueError("Invalid Instagram URL format.")
 
-        shortcode = shortcode_match.group(1)
+        shortcode = shortcode_match.group(2)  # Capture the shortcode after "p/" or "reel/"
         post = instaloader.Post.from_shortcode(loader.context, shortcode)
 
         if post.is_video:
@@ -198,6 +199,7 @@ def fetch_instagram_content(url):
     except Exception as e:
         logger.error(f"Error fetching Instagram content: {e}")
         raise RuntimeError(f"Error fetching Instagram content: {e}")
+
     
 def extract_audio_from_video(video_path):
     try:
